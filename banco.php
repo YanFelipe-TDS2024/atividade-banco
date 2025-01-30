@@ -47,17 +47,9 @@ function validarCPF($CPFUnfiltered){
 }
 
 function validarTelefone($Telefone){
-    if(strlen($Telefone) != 14){
-        return false;
-    }
-
-    if(! ($Telefone[0] == "(" and $Telefone[3] == ")" and $Telefone[9]) == "-"){
-        return false;
-    }
-
     $TelefoneFiltrado = preg_replace("/[^0-9]/", "", $Telefone);
 
-    if(strlen($TelefoneFiltrado) != 11){
+    if(strlen($TelefoneFiltrado) != 11 or !is_numeric($TelefoneFiltrado)){
         return false;
     }
 
@@ -73,9 +65,11 @@ function perguntaCadastrar($Pergunta, $Tipo){
     
         system("clear");
 
-        print("Confirmar resposta: " . $Resposta . "\n\n");
+        print("Confirmar " . $Tipo . ": " . $Resposta . "\n\n");
 
-        $Confirmacao = readLine("[1] Confirmar   [2] Retornar   ");
+        print("[1] Confirmar\n");
+        print("[2] Retornar\n");
+        $Confirmacao = readLine("");
 
         $Valido = true;
 
@@ -95,6 +89,65 @@ function perguntaCadastrar($Pergunta, $Tipo){
     }
 }
 
+function mudarSaldo($MudancaDeSaldo, $Tipo, &$Saldo){
+    if($Tipo == "SACAR"){
+        if($MudancaDeSaldo > $Saldo){
+            system("clear");
+            print("Você não tem R$" . $MudancaDeSaldo . " para sacar de sua conta!\n\n");
+
+            readline("[PRESSIONE ENTER PARA RETORNAR]");
+
+            return;
+        }
+
+        $Saldo -= $MudancaDeSaldo;
+    }else{
+        $Saldo += $MudancaDeSaldo;
+    }
+}
+
+function pegarQuantidadeDinheiro($Tipo, &$Saldo){
+    while(true){
+        system("clear");
+
+        print("--- " . $Tipo . " DINHEIRO ---\n");
+        print("Quanto dinheiro deseja " . $Tipo . "?\n\n");
+        print("[Informe 0 para cancelar]\n");    
+
+        $Resposta = readline("");
+
+        if (strlen($Resposta) <= 0){ continue; }
+
+        if (!is_numeric($Resposta)){ continue; }
+
+        system("clear");
+
+        if($Resposta > 0){
+            while(true){
+                system("clear");
+
+                print("Confirmar valor: R$" . $Resposta . "\n\n");
+                print("[1] Confirmar\n");
+                print("[2] Retornar\n\n");
+
+                $Confirmacao = readline("");
+
+                if($Confirmacao == 1){
+                    mudarSaldo($Resposta, $Tipo, $Saldo);
+                    return;
+                }elseif($Confirmacao == 2){
+                    break;
+                }
+            }
+        }elseif($Resposta == 0){
+            break;
+        }else{
+            print("Valor inválido!\n\n");
+            readline("[PRESSIONE ENTER PARA RETORNAR]");
+        }
+    }
+}
+
 function painelConta($Conta){
     $Saldo = $Conta['Saldo'];
     $NumeroConta = $Conta['NumeroConta'];
@@ -102,12 +155,25 @@ function painelConta($Conta){
     while(true){
         system("clear");
 
-        print($Saldo);
-
         print("NÚMERO DA CONTA: $NumeroConta\n");
         print("Saldo: R$$Saldo\n\n");
-        readline("");
+
+        print("[1] Depositar dinheiro\n");
+        print("[2] Sacar dinheiro\n\n");
+        print("[3] Fechar banco\n");
+
+        $Resposta = readline("");
+
+        if($Resposta == 1){
+            pegarQuantidadeDinheiro("DEPOSITAR", $Saldo);
+        }elseif($Resposta == 2){
+            pegarQuantidadeDinheiro("SACAR", $Saldo);
+        }elseif($Resposta == 3){
+            break;
+        }
     }
+
+    system("clear");
 }
 
 function cadastrarConta($CPF){
@@ -124,8 +190,8 @@ function cadastrarConta($CPF){
 
 function cadastrarCliente(){
     $Nome = perguntaCadastrar("Informe o seu nome: ", "Nome");
-    $Telefone = perguntaCadastrar("Informe o seu telefone:   Formato: (DDD)00000-0000    ", "Telefone");
-    $CPF = perguntaCadastrar("Informe o seu CPF:    ", "CPF");
+    $Telefone = perguntaCadastrar("Informe o seu telefone: ", "Telefone");
+    $CPF = perguntaCadastrar("Informe o seu CPF: ", "CPF");
 
     $Cliente = [
         "Nome" => $Nome,
