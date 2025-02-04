@@ -3,14 +3,6 @@
 $clientes = [];
 $contas = [];
 
-$cliente = [
-    "Nome" => "John Doe",
-    "CPF" => "00000000000",
-    "Telefone" => "(45)999999999"
-];
-
-$clientes[] = $cliente;
-
 function digitoVerificador($CPF, $Final){
     $Soma = 0;
     for($i = 0; $i < $Final; $i++) {
